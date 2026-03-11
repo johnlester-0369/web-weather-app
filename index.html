@@ -479,16 +479,18 @@
     ═══════════════════════════════════════════════════════════ */
     function renderCurrent(data, locationLabel) {
       const c = data.current;
-      const { label, emoji } = getWeatherMeta(c.weather_code, c.is_day);
+      const { label, icon } = getWeatherMeta(c.weather_code, c.is_day);
       const units = data.current_units;
 
       document.getElementById('locationName').textContent = locationLabel;
-      document.getElementById('weatherEmoji').textContent = emoji;
+      // Lucide SVGs must be injected via innerHTML — textContent would render the tag as literal text
+      document.getElementById('weatherEmoji').innerHTML = `<i data-lucide="${icon}"></i>`;
       document.getElementById('tempMain').textContent = `${round(c.temperature_2m)}${units.temperature_2m}`;
       document.getElementById('weatherLabel').textContent = label;
       document.getElementById('feelsLike').textContent = `${round(c.apparent_temperature)}${units.apparent_temperature}`;
       document.getElementById('humidity').textContent = `${c.relative_humidity_2m}${units.relative_humidity_2m}`;
       document.getElementById('windSpeed').textContent = `${round(c.wind_speed_10m)} km/h`;
+      lucide.createIcons();
     }
 
     /* ═══════════════════════════════════════════════════════════
