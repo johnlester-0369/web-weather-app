@@ -314,8 +314,14 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* Lucide SVGs inherit currentColor; explicit sizes match the replaced emoji dimensions */
+    .weather-emoji svg { width: 64px; height: 64px; color: rgb(var(--color-on-primary)); display: block; margin: 0 auto; }
+    .day-emoji svg { width: 22px; height: 22px; color: rgb(var(--color-on-surface-variant)); display: block; }
+
     .hidden { display: none !important; }
   </style>
+  <!-- Lucide UMD CDN — must load in <head> so window.lucide is available before inline body script -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 <body>
 
