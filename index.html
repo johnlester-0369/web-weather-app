@@ -314,8 +314,14 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* Lucide SVGs inherit currentColor; explicit sizes match the replaced emoji dimensions */
+    .weather-emoji svg { width: 64px; height: 64px; color: rgb(var(--color-on-primary)); display: block; margin: 0 auto; }
+    .day-emoji svg { width: 22px; height: 22px; color: rgb(var(--color-on-surface-variant)); display: block; }
+
     .hidden { display: none !important; }
   </style>
+  <!-- Lucide UMD CDN — must load in <head> so window.lucide is available before inline body script -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 <body>
 
@@ -346,7 +352,7 @@
 
   <!-- ══ EMPTY STATE ═════════════════════════════════ -->
   <div id="emptyState" class="state-msg">
-    <div style="font-size:40px;margin-bottom:12px;">🌤️</div>
+    <div class="empty-icon" style="margin-bottom:12px;"><i data-lucide="cloud-sun"></i></div>
     Search for a city to see the weather
   </div>
 
@@ -385,38 +391,38 @@
     /* ═══════════════════════════════════════════════════════════
        WMO WEATHER CODE MAP
        Source: https://open-meteo.com/en/docs — "WMO Weather Code"
-       Maps numeric codes to human label + emoji for display
+       Maps numeric codes to human label + Lucide icon name for display
     ═══════════════════════════════════════════════════════════ */
     const WMO = {
-      0:  { label: 'Clear sky',          day: '☀️',  night: '🌙' },
-      1:  { label: 'Mainly clear',       day: '🌤️', night: '🌙' },
-      2:  { label: 'Partly cloudy',      day: '⛅',  night: '⛅' },
-      3:  { label: 'Overcast',           day: '☁️',  night: '☁️' },
-      45: { label: 'Fog',                day: '🌫️', night: '🌫️' },
-      48: { label: 'Icy fog',            day: '🌫️', night: '🌫️' },
-      51: { label: 'Light drizzle',      day: '🌦️', night: '🌦️' },
-      53: { label: 'Drizzle',            day: '🌦️', night: '🌦️' },
-      55: { label: 'Heavy drizzle',      day: '🌦️', night: '🌦️' },
-      61: { label: 'Light rain',         day: '🌧️', night: '🌧️' },
-      63: { label: 'Rain',               day: '🌧️', night: '🌧️' },
-      65: { label: 'Heavy rain',         day: '🌧️', night: '🌧️' },
-      71: { label: 'Light snow',         day: '🌨️', night: '🌨️' },
-      73: { label: 'Snow',               day: '❄️',  night: '❄️' },
-      75: { label: 'Heavy snow',         day: '❄️',  night: '❄️' },
-      77: { label: 'Snow grains',        day: '🌨️', night: '🌨️' },
-      80: { label: 'Light showers',      day: '🌦️', night: '🌧️' },
-      81: { label: 'Rain showers',       day: '🌧️', night: '🌧️' },
-      82: { label: 'Heavy showers',      day: '⛈️',  night: '⛈️' },
-      85: { label: 'Snow showers',       day: '🌨️', night: '🌨️' },
-      86: { label: 'Heavy snow showers', day: '❄️',  night: '❄️' },
-      95: { label: 'Thunderstorm',       day: '⛈️',  night: '⛈️' },
-      96: { label: 'Thunderstorm + hail',day: '⛈️',  night: '⛈️' },
-      99: { label: 'Thunderstorm + hail',day: '⛈️',  night: '⛈️' },
+      0:  { label: 'Clear sky',          day: 'sun',              night: 'moon' },
+      1:  { label: 'Mainly clear',       day: 'sun',              night: 'moon' },
+      2:  { label: 'Partly cloudy',      day: 'cloud-sun',        night: 'cloud-moon' },
+      3:  { label: 'Overcast',           day: 'cloud',            night: 'cloud' },
+      45: { label: 'Fog',                day: 'cloud-fog',        night: 'cloud-fog' },
+      48: { label: 'Icy fog',            day: 'cloud-fog',        night: 'cloud-fog' },
+      51: { label: 'Light drizzle',      day: 'cloud-drizzle',    night: 'cloud-drizzle' },
+      53: { label: 'Drizzle',            day: 'cloud-drizzle',    night: 'cloud-drizzle' },
+      55: { label: 'Heavy drizzle',      day: 'cloud-drizzle',    night: 'cloud-drizzle' },
+      61: { label: 'Light rain',         day: 'cloud-rain',       night: 'cloud-rain' },
+      63: { label: 'Rain',               day: 'cloud-rain',       night: 'cloud-rain' },
+      65: { label: 'Heavy rain',         day: 'cloud-rain',       night: 'cloud-rain' },
+      71: { label: 'Light snow',         day: 'cloud-snow',       night: 'cloud-snow' },
+      73: { label: 'Snow',               day: 'cloud-snow',       night: 'cloud-snow' },
+      75: { label: 'Heavy snow',         day: 'cloud-snow',       night: 'cloud-snow' },
+      77: { label: 'Snow grains',        day: 'cloud-snow',       night: 'cloud-snow' },
+      80: { label: 'Light showers',      day: 'cloud-rain',       night: 'cloud-rain' },
+      81: { label: 'Rain showers',       day: 'cloud-rain',       night: 'cloud-rain' },
+      82: { label: 'Heavy showers',      day: 'cloud-lightning',  night: 'cloud-lightning' },
+      85: { label: 'Snow showers',       day: 'cloud-snow',       night: 'cloud-snow' },
+      86: { label: 'Heavy snow showers', day: 'cloud-snow',       night: 'cloud-snow' },
+      95: { label: 'Thunderstorm',       day: 'cloud-lightning',  night: 'cloud-lightning' },
+      96: { label: 'Thunderstorm + hail',day: 'cloud-lightning',  night: 'cloud-lightning' },
+      99: { label: 'Thunderstorm + hail',day: 'cloud-lightning',  night: 'cloud-lightning' },
     };
 
     function getWeatherMeta(code, isDay = 1) {
-      const entry = WMO[code] ?? { label: 'Unknown', day: '🌡️', night: '🌡️' };
-      return { label: entry.label, emoji: isDay ? entry.day : entry.night };
+      const entry = WMO[code] ?? { label: 'Unknown', day: 'thermometer', night: 'thermometer' };
+      return { label: entry.label, icon: isDay ? entry.day : entry.night };
     }
 
     /* ═══════════════════════════════════════════════════════════
@@ -473,16 +479,18 @@
     ═══════════════════════════════════════════════════════════ */
     function renderCurrent(data, locationLabel) {
       const c = data.current;
-      const { label, emoji } = getWeatherMeta(c.weather_code, c.is_day);
+      const { label, icon } = getWeatherMeta(c.weather_code, c.is_day);
       const units = data.current_units;
 
       document.getElementById('locationName').textContent = locationLabel;
-      document.getElementById('weatherEmoji').textContent = emoji;
+      // Lucide SVGs must be injected via innerHTML — textContent would render the tag as literal text
+      document.getElementById('weatherEmoji').innerHTML = `<i data-lucide="${icon}"></i>`;
       document.getElementById('tempMain').textContent = `${round(c.temperature_2m)}${units.temperature_2m}`;
       document.getElementById('weatherLabel').textContent = label;
       document.getElementById('feelsLike').textContent = `${round(c.apparent_temperature)}${units.apparent_temperature}`;
       document.getElementById('humidity').textContent = `${c.relative_humidity_2m}${units.relative_humidity_2m}`;
       document.getElementById('windSpeed').textContent = `${round(c.wind_speed_10m)} km/h`;
+      lucide.createIcons();
     }
 
     /* ═══════════════════════════════════════════════════════════
@@ -503,7 +511,7 @@
         const min = daily.temperature_2m_min[i];
         const max = daily.temperature_2m_max[i];
         const code = daily.weather_code[i];
-        const { emoji } = getWeatherMeta(code, 1); // daily always shows day icon
+        const { icon } = getWeatherMeta(code, 1); // daily always shows day icon
 
         // Bar position: left offset + width represent the day's range within the week
         const leftPct  = ((min - allMin) / span) * 100;
@@ -513,7 +521,7 @@
         row.className = 'forecast-day';
         row.innerHTML = `
           <span class="day-label">${formatDay(date)}</span>
-          <span class="day-emoji">${emoji}</span>
+          <span class="day-emoji"><i data-lucide="${icon}"></i></span>
           <div class="range-bar-wrapper">
             <div class="range-bar-fill" style="left:${leftPct.toFixed(1)}%;width:${Math.max(widthPct,8).toFixed(1)}%"></div>
           </div>
@@ -524,6 +532,8 @@
         `;
         list.appendChild(row);
       });
+      // Process all <i data-lucide="..."> elements inserted by the forEach above in one batch
+      lucide.createIcons();
     }
 
     /* ═══════════════════════════════════════════════════════════
@@ -664,6 +674,8 @@
 
     // Attempt geolocation on load for immediate value
     initGeolocation();
+    // Process the static <i data-lucide="cloud-sun"> in the empty-state HTML that was never dynamically rendered
+    lucide.createIcons();
   </script>
 </body>
 </html>
