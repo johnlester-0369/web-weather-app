@@ -18,7 +18,8 @@ export function showCard() {
 export function showError(msg) {
   document.getElementById('loadingState').classList.add('hidden');
   const el = document.getElementById('errorMsg');
-  el.textContent = msg;
+  // Target #errorText span to preserve the alert-circle Lucide SVG sibling in the error container
+  document.getElementById('errorText').textContent = msg;
   el.classList.remove('hidden');
 }
 

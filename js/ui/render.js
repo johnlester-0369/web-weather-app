@@ -10,7 +10,8 @@ export function renderCurrent(data, locationLabel) {
   const { label, icon } = getWeatherMeta(c.weather_code, c.is_day);
   const units = data.current_units;
 
-  document.getElementById('locationName').textContent = locationLabel;
+  // innerHTML required (not textContent) to inject the map-pin <i data-lucide> tag inline
+  document.getElementById('locationName').innerHTML = `<i data-lucide="map-pin"></i>${locationLabel}`;
   // Lucide SVGs must be injected via innerHTML — textContent would render the tag as a literal string
   document.getElementById('weatherEmoji').innerHTML = `<i data-lucide="${icon}"></i>`;
   document.getElementById('tempMain').textContent = `${round(c.temperature_2m)}${units.temperature_2m}`;

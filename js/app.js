@@ -106,12 +106,15 @@ document.getElementById('searchBtn').addEventListener('click', () => {
   if (q) searchCity(q);
 });
 
+// Both locate buttons (search bar icon + empty-state CTA) drive the same flow;
+// explicit click required — no auto-request on load avoids the intrusive browser prompt
+document.getElementById('locateBtn').addEventListener('click', () => initGeolocation());
+document.getElementById('locateCtaBtn').addEventListener('click', () => initGeolocation());
+
 // Close suggestions when clicking anywhere outside the search wrapper
 document.addEventListener('click', e => {
   if (!e.target.closest('.search-wrapper')) closeSuggestions();
 });
 
-// Attempt geolocation immediately for first-visit value
-initGeolocation();
 // Process the static <i data-lucide="cloud-sun"> in the empty-state HTML
 lucide.createIcons();
