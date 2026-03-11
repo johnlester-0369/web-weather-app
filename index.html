@@ -674,6 +674,8 @@
 
     // Attempt geolocation on load for immediate value
     initGeolocation();
+    // Process the static <i data-lucide="cloud-sun"> in the empty-state HTML that was never dynamically rendered
+    lucide.createIcons();
   </script>
 </body>
 </html>
