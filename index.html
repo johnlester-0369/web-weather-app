@@ -511,7 +511,7 @@
         const min = daily.temperature_2m_min[i];
         const max = daily.temperature_2m_max[i];
         const code = daily.weather_code[i];
-        const { emoji } = getWeatherMeta(code, 1); // daily always shows day icon
+        const { icon } = getWeatherMeta(code, 1); // daily always shows day icon
 
         // Bar position: left offset + width represent the day's range within the week
         const leftPct  = ((min - allMin) / span) * 100;
@@ -521,7 +521,7 @@
         row.className = 'forecast-day';
         row.innerHTML = `
           <span class="day-label">${formatDay(date)}</span>
-          <span class="day-emoji">${emoji}</span>
+          <span class="day-emoji"><i data-lucide="${icon}"></i></span>
           <div class="range-bar-wrapper">
             <div class="range-bar-fill" style="left:${leftPct.toFixed(1)}%;width:${Math.max(widthPct,8).toFixed(1)}%"></div>
           </div>
@@ -532,6 +532,8 @@
         `;
         list.appendChild(row);
       });
+      // Process all <i data-lucide="..."> elements inserted by the forEach above in one batch
+      lucide.createIcons();
     }
 
     /* ═══════════════════════════════════════════════════════════
