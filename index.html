@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weather</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!-- Roboto: canonical MUI font; matches the provided Material token system -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ═══════════════════════════════════════════════
+       DESIGN TOKENS — subset from user-provided system
+       Space-separated RGB → consumed via rgb(var(--x))
+    ════════════════════════════════════════════════ */
+    :root {
+      --color-primary: 68 114 210;
+      --color-on-primary: 255 255 255;
+      --color-primary-container: 221 232 254;
+      --color-on-primary-container: 26 48 95;
+      --color-surface: 255 255 255;
+      --color-on-surface: 0 0 0;
+      --color-surface-container-low: 248 250 252;
+      --color-surface-container: 241 245 249;
+      --color-surface-container-high: 227 233 241;
+      --color-surface-container-highest: 212 221 232;
+      --color-outline: 98 116 142;
+      --color-outline-variant: 144 161 185;
+      --color-on-surface-variant: 50 65 87;
+      --color-error: 231 0 11;
+      --color-error-container: 255 226 226;
+      --color-gradient-primary: linear-gradient(135deg, rgb(53,109,232) 0%, rgb(23,129,175) 100%);
+    }
+
+    /* ═══════════════════════════════════════════════
+       RESET & BASE
+    ════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: rgb(var(--color-surface-container-low));
+      color: rgb(var(--color-on-surface));
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 48px;
+    }
+
+    /* ═══════════════════════════════════════════════
+       SEARCH AREA
+    ════════════════════════════════════════════════ */
+    .search-wrapper {
+      width: 100%;
+      max-width: 480px;
+      position: relative;
+      margin-bottom: 24px;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 12px 16px;
+      font-family: inherit;
+      font-size: 15px;
+      border: 1px solid rgb(var(--color-outline-variant));
+      border-radius: 8px;
+      background: rgb(var(--color-surface));
+      color: rgb(var(--color-on-surface));
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-input:focus {
+      /* Highlight the field on focus for clear affordance */
+      border-color: rgb(var(--color-primary));
+    }
+
+    .search-btn {
+      padding: 12px 20px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      background: rgb(var(--color-primary));
+      color: rgb(var(--color-on-primary));
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .search-btn:hover { opacity: 0.88; }
+    .search-btn:active { opacity: 0.76; }
+
+    /* Suggestion dropdown */
+    .suggestions {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: rgb(var(--color-surface));
+      border: 1px solid rgb(var(--color-outline-variant));
+      border-radius: 8px;
+      overflow: hidden;
+      z-index: 10;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+    }
+
+    .suggestion-item {
+      padding: 12px 16px;
+      font-size: 14px;
+      color: rgb(var(--color-on-surface-variant));
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+
+    .suggestion-item:hover {
+      background: rgb(var(--color-surface-container));
+    }
+
+    /* ═══════════════════════════════════════════════
+       MAIN CARD CONTAINER
+    ════════════════════════════════════════════════ */
+    .card {
+      width: 100%;
+      max-width: 480px;
+      background: rgb(var(--color-surface));
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    /* ═══════════════════════════════════════════════
+       CURRENT WEATHER HEADER
+       Gradient background from primary token
+    ════════════════════════════════════════════════ */
+    .current {
+      background: var(--color-gradient-primary);
+      color: rgb(var(--color-on-primary));
+      padding: 32px 24px 28px;
+      text-align: center;
+    }
+
+    .location-name {
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      opacity: 0.85;
+      margin-bottom: 12px;
+    }
+
+    .weather-emoji {
+      font-size: 64px;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .temp-main {
+      font-size: 56px;
+      font-weight: 300;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .weather-label {
+      font-size: 15px;
+      font-weight: 400;
+      opacity: 0.9;
+      margin-bottom: 20px;
+    }
+
+    /* Feels-like / humidity / wind row */
+    .meta-row {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+    }
+
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .meta-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      opacity: 0.7;
+    }
+
+    .meta-value {
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    /* ═══════════════════════════════════════════════
+       7-DAY FORECAST STRIP
+    ════════════════════════════════════════════════ */
+    .forecast-section {
+      padding: 0 8px 12px;
+    }
+
+    .forecast-title {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: rgb(var(--color-on-surface-variant));
+      padding: 16px 12px 10px;
+    }
+
+    .forecast-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .forecast-day {
+      display: grid;
+      /* day | emoji | min-max bar | temps */
+      grid-template-columns: 52px 36px 1fr auto;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      transition: background 0.1s;
+    }
+
+    .forecast-day:hover {
+      background: rgb(var(--color-surface-container-low));
+    }
+
+    .day-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: rgb(var(--color-on-surface-variant));
+    }
+
+    .day-emoji { font-size: 22px; text-align: center; }
+
+    /* Temperature range bar */
+    .range-bar-wrapper {
+      height: 6px;
+      background: rgb(var(--color-surface-container-high));
+      border-radius: 4px;
+      position: relative;
+      overflow: visible;
+    }
+
+    .range-bar-fill {
+      position: absolute;
+      height: 100%;
+      border-radius: 4px;
+      background: rgb(var(--color-primary));
+      opacity: 0.65;
+    }
+
+    .day-temps {
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      color: rgb(var(--color-on-surface));
+    }
+
+    .day-temps .temp-min {
+      color: rgb(var(--color-on-surface-variant));
+      font-weight: 400;
+    }
+
+    /* ═══════════════════════════════════════════════
+       STATE: LOADING / ERROR / EMPTY
+    ════════════════════════════════════════════════ */
+    .state-msg {
+      width: 100%;
+      max-width: 480px;
+      text-align: center;
+      padding: 48px 16px;
+      color: rgb(var(--color-on-surface-variant));
+      font-size: 14px;
+    }
+
+    .error-msg {
+      color: rgb(var(--color-error));
+      background: rgb(var(--color-error-container));
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      max-width: 480px;
+      width: 100%;
+    }
+
+    /* Spinner — pure CSS, no library needed */
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid rgb(var(--color-surface-container-highest));
+      border-top-color: rgb(var(--color-primary));
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto 12px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <!-- ══ SEARCH ══════════════════════════════════════ -->
+  <div class="search-wrapper">
+    <div class="search-row">
+      <input
+        id="searchInput"
+        class="search-input"
+        type="text"
+        placeholder="Search city…"
+        autocomplete="off"
+        aria-label="Search city"
+      />
+      <button id="searchBtn" class="search-btn">Search</button>
+    </div>
+    <div id="suggestions" class="suggestions hidden" role="listbox"></div>
+  </div>
+
+  <!-- ══ ERROR BANNER ════════════════════════════════ -->
+  <div id="errorMsg" class="error-msg hidden" role="alert"></div>
+
+  <!-- ══ LOADING STATE ═══════════════════════════════ -->
+  <div id="loadingState" class="state-msg hidden">
+    <div class="spinner"></div>
+    Loading weather…
+  </div>
+
+  <!-- ══ EMPTY STATE ═════════════════════════════════ -->
+  <div id="emptyState" class="state-msg">
+    <div style="font-size:40px;margin-bottom:12px;">🌤️</div>
+    Search for a city to see the weather
+  </div>
+
+  <!-- ══ WEATHER CARD ════════════════════════════════ -->
+  <div id="weatherCard" class="card hidden">
+    <!-- Current conditions -->
+    <div class="current">
+      <div id="locationName" class="location-name"></div>
+      <div id="weatherEmoji" class="weather-emoji"></div>
+      <div id="tempMain" class="temp-main"></div>
+      <div id="weatherLabel" class="weather-label"></div>
+      <div class="meta-row">
+        <div class="meta-item">
+          <span class="meta-label">Feels like</span>
+          <span id="feelsLike" class="meta-value"></span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Humidity</span>
+          <span id="humidity" class="meta-value"></span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Wind</span>
+          <span id="windSpeed" class="meta-value"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7-day forecast -->
+    <div class="forecast-section">
+      <div class="forecast-title">7-Day Forecast</div>
+      <div id="forecastList" class="forecast-list"></div>
+    </div>
+  </div>
+
+  <script>
+    /* ═══════════════════════════════════════════════════════════
+       WMO WEATHER CODE MAP
+       Source: https://open-meteo.com/en/docs — "WMO Weather Code"
+       Maps numeric codes to human label + emoji for display
+    ═══════════════════════════════════════════════════════════ */
+    const WMO = {
+      0:  { label: 'Clear sky',          day: '☀️',  night: '🌙' },
+      1:  { label: 'Mainly clear',       day: '🌤️', night: '🌙' },
+      2:  { label: 'Partly cloudy',      day: '⛅',  night: '⛅' },
+      3:  { label: 'Overcast',           day: '☁️',  night: '☁️' },
+      45: { label: 'Fog',                day: '🌫️', night: '🌫️' },
+      48: { label: 'Icy fog',            day: '🌫️', night: '🌫️' },
+      51: { label: 'Light drizzle',      day: '🌦️', night: '🌦️' },
+      53: { label: 'Drizzle',            day: '🌦️', night: '🌦️' },
+      55: { label: 'Heavy drizzle',      day: '🌦️', night: '🌦️' },
+      61: { label: 'Light rain',         day: '🌧️', night: '🌧️' },
+      63: { label: 'Rain',               day: '🌧️', night: '🌧️' },
+      65: { label: 'Heavy rain',         day: '🌧️', night: '🌧️' },
+      71: { label: 'Light snow',         day: '🌨️', night: '🌨️' },
+      73: { label: 'Snow',               day: '❄️',  night: '❄️' },
+      75: { label: 'Heavy snow',         day: '❄️',  night: '❄️' },
+      77: { label: 'Snow grains',        day: '🌨️', night: '🌨️' },
+      80: { label: 'Light showers',      day: '🌦️', night: '🌧️' },
+      81: { label: 'Rain showers',       day: '🌧️', night: '🌧️' },
+      82: { label: 'Heavy showers',      day: '⛈️',  night: '⛈️' },
+      85: { label: 'Snow showers',       day: '🌨️', night: '🌨️' },
+      86: { label: 'Heavy snow showers', day: '❄️',  night: '❄️' },
+      95: { label: 'Thunderstorm',       day: '⛈️',  night: '⛈️' },
+      96: { label: 'Thunderstorm + hail',day: '⛈️',  night: '⛈️' },
+      99: { label: 'Thunderstorm + hail',day: '⛈️',  night: '⛈️' },
+    };
+
+    function getWeatherMeta(code, isDay = 1) {
+      const entry = WMO[code] ?? { label: 'Unknown', day: '🌡️', night: '🌡️' };
+      return { label: entry.label, emoji: isDay ? entry.day : entry.night };
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       FORMAT HELPERS
+    ═══════════════════════════════════════════════════════════ */
+    function formatDay(isoDate) {
+      const d = new Date(isoDate + 'T00:00:00');
+      const today = new Date();
+      // Show "Today" for the first row so the user has immediate orientation
+      if (d.toDateString() === today.toDateString()) return 'Today';
+      return d.toLocaleDateString('en-US', { weekday: 'short' });
+    }
+
+    function round(n) { return Math.round(n); }
+
+    /* ═══════════════════════════════════════════════════════════
+       OPEN-METEO GEOCODING
+       Endpoint: https://geocoding-api.open-meteo.com/v1/search
+       Resolves city name → { name, country, latitude, longitude }
+    ═══════════════════════════════════════════════════════════ */
+    async function geocodeCity(query) {
+      const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Geocoding request failed');
+      const data = await res.json();
+      return data.results ?? [];
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       OPEN-METEO FORECAST
+       Endpoint: https://api.open-meteo.com/v1/forecast
+       - current: live conditions (temperature, apparent, humidity, wind, code, is_day)
+       - daily: 7-day min/max temp + dominant weather code
+       - timezone=auto: server resolves timezone from coordinates
+    ═══════════════════════════════════════════════════════════ */
+    async function fetchWeather(lat, lon) {
+      const params = new URLSearchParams({
+        latitude: lat,
+        longitude: lon,
+        current: 'temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code,is_day',
+        daily: 'temperature_2m_max,temperature_2m_min,weather_code',
+        wind_speed_unit: 'kmh',
+        timezone: 'auto',
+        forecast_days: 7,
+      });
+      const url = `https://api.open-meteo.com/v1/forecast?${params}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Weather request failed');
+      return res.json();
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       DOM RENDER — CURRENT CONDITIONS
+    ═══════════════════════════════════════════════════════════ */
+    function renderCurrent(data, locationLabel) {
+      const c = data.current;
+      const { label, emoji } = getWeatherMeta(c.weather_code, c.is_day);
+      const units = data.current_units;
+
+      document.getElementById('locationName').textContent = locationLabel;
+      document.getElementById('weatherEmoji').textContent = emoji;
+      document.getElementById('tempMain').textContent = `${round(c.temperature_2m)}${units.temperature_2m}`;
+      document.getElementById('weatherLabel').textContent = label;
+      document.getElementById('feelsLike').textContent = `${round(c.apparent_temperature)}${units.apparent_temperature}`;
+      document.getElementById('humidity').textContent = `${c.relative_humidity_2m}${units.relative_humidity_2m}`;
+      document.getElementById('windSpeed').textContent = `${round(c.wind_speed_10m)} km/h`;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       DOM RENDER — 7-DAY FORECAST
+       Bar width derived from how each day's range sits within the
+       global week min–max, giving visual temperature context
+    ═══════════════════════════════════════════════════════════ */
+    function renderForecast(data) {
+      const daily = data.daily;
+      const allMin = Math.min(...daily.temperature_2m_min);
+      const allMax = Math.max(...daily.temperature_2m_max);
+      const span = allMax - allMin || 1; // avoid div-by-zero for uniform weeks
+
+      const list = document.getElementById('forecastList');
+      list.innerHTML = '';
+
+      daily.time.forEach((date, i) => {
+        const min = daily.temperature_2m_min[i];
+        const max = daily.temperature_2m_max[i];
+        const code = daily.weather_code[i];
+        const { emoji } = getWeatherMeta(code, 1); // daily always shows day icon
+
+        // Bar position: left offset + width represent the day's range within the week
+        const leftPct  = ((min - allMin) / span) * 100;
+        const widthPct = ((max - min) / span) * 100;
+
+        const row = document.createElement('div');
+        row.className = 'forecast-day';
+        row.innerHTML = `
+          <span class="day-label">${formatDay(date)}</span>
+          <span class="day-emoji">${emoji}</span>
+          <div class="range-bar-wrapper">
+            <div class="range-bar-fill" style="left:${leftPct.toFixed(1)}%;width:${Math.max(widthPct,8).toFixed(1)}%"></div>
+          </div>
+          <span class="day-temps">
+            <span class="temp-min">${round(min)}°</span>
+            &thinsp;/&thinsp;${round(max)}°
+          </span>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       UI STATE HELPERS — centralise show/hide logic
+    ═══════════════════════════════════════════════════════════ */
+    function showLoading() {
+      document.getElementById('loadingState').classList.remove('hidden');
+      document.getElementById('weatherCard').classList.add('hidden');
+      document.getElementById('emptyState').classList.add('hidden');
+      document.getElementById('errorMsg').classList.add('hidden');
+    }
+
+    function showCard() {
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('weatherCard').classList.remove('hidden');
+      document.getElementById('emptyState').classList.add('hidden');
+    }
+
+    function showError(msg) {
+      document.getElementById('loadingState').classList.add('hidden');
+      const el = document.getElementById('errorMsg');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+    }
+
+    function closeSuggestions() {
+      document.getElementById('suggestions').classList.add('hidden');
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       LOAD WEATHER FOR A KNOWN LOCATION
+    ═══════════════════════════════════════════════════════════ */
+    async function loadWeather(lat, lon, label) {
+      closeSuggestions();
+      showLoading();
+      try {
+        const data = await fetchWeather(lat, lon);
+        renderCurrent(data, label);
+        renderForecast(data);
+        showCard();
+      } catch {
+        showError('Could not load weather data. Please try again.');
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       SEARCH — SHOW GEOCODING SUGGESTIONS
+    ═══════════════════════════════════════════════════════════ */
+    async function searchCity(query) {
+      if (!query.trim()) return;
+      try {
+        const results = await geocodeCity(query);
+        const box = document.getElementById('suggestions');
+
+        if (!results.length) {
+          box.innerHTML = `<div class="suggestion-item" style="pointer-events:none;opacity:0.6">No results found</div>`;
+          box.classList.remove('hidden');
+          return;
+        }
+
+        box.innerHTML = '';
+        results.forEach(r => {
+          const item = document.createElement('div');
+          item.className = 'suggestion-item';
+          item.setAttribute('role', 'option');
+          // Show country for disambiguation when multiple cities share a name
+          const label = [r.name, r.admin1, r.country].filter(Boolean).join(', ');
+          item.textContent = label;
+          item.addEventListener('click', () => {
+            document.getElementById('searchInput').value = r.name;
+            loadWeather(r.latitude, r.longitude, label);
+          });
+          box.appendChild(item);
+        });
+        box.classList.remove('hidden');
+      } catch {
+        showError('Search failed. Please check your connection.');
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       GEOLOCATION — load the user's own location on first visit
+       so the app is immediately useful without typing anything
+    ═══════════════════════════════════════════════════════════ */
+    function initGeolocation() {
+      if (!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition(
+        async pos => {
+          const { latitude, longitude } = pos.coords;
+          // Reverse-label via geocoding using coords to get a friendly city name
+          try {
+            const url = `https://geocoding-api.open-meteo.com/v1/search?name=&latitude=${latitude}&longitude=${longitude}&count=1&language=en&format=json`;
+            // Open-Meteo geocoding doesn't support reverse lookup, so show coords as fallback
+            await loadWeather(latitude, longitude, 'My Location');
+          } catch {
+            // Silent fail — user can still search manually
+          }
+        },
+        () => { /* User denied location — no error shown, search bar guides them */ }
+      );
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       DEBOUNCE — avoid firing geocoding on every keystroke
+    ═══════════════════════════════════════════════════════════ */
+    function debounce(fn, ms) {
+      let t;
+      return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       EVENT WIRING
+    ═══════════════════════════════════════════════════════════ */
+    const debouncedSearch = debounce(q => searchCity(q), 350);
+
+    document.getElementById('searchInput').addEventListener('input', e => {
+      const q = e.target.value.trim();
+      if (q.length >= 2) debouncedSearch(q);
+      else document.getElementById('suggestions').classList.add('hidden');
+    });
+
+    document.getElementById('searchInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const q = e.target.value.trim();
+        if (q) searchCity(q);
+      }
+    });
+
+    document.getElementById('searchBtn').addEventListener('click', () => {
+      const q = document.getElementById('searchInput').value.trim();
+      if (q) searchCity(q);
+    });
+
+    // Close suggestions when clicking anywhere else on the page
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.search-wrapper')) closeSuggestions();
+    });
+
+    // Attempt geolocation on load for immediate value
+    initGeolocation();
+  </script>
+</body>
+</html>
